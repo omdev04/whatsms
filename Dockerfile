@@ -1,9 +1,10 @@
 # ============================================================
-# WhatsStore SaaS - Dokploy Dockerfile
+# WhatsStore SaaS - Dokploy Dockerfile (Self-Contained)
 # PHP 8.2 + Nginx + FPM + Supervisor
+# All configs embedded inline — no external COPY needed
 # ============================================================
 
-FROM php:8.2-fpm-alpine AS base
+FROM php:8.2-fpm-alpine
 
 # Install system dependencies
 RUN apk add --no-cache \
@@ -23,8 +24,7 @@ RUN apk add --no-cache \
     oniguruma-dev \
     libxml2-dev \
     openssl-dev \
-    bash \
-    shadow
+    bash
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd \
@@ -49,10 +49,8 @@ COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copy composer files first (layer caching optimization)
+# Copy application files
 COPY composer.json composer.lock ./
-
-# Install PHP dependencies (production, no scripts yet)
 RUN composer install \
     --no-dev \
     --no-scripts \
@@ -61,31 +59,149 @@ RUN composer install \
     --optimize-autoloader \
     --ignore-platform-reqs
 
-# Copy rest of the application
 COPY . .
-
-# Generate optimized autoloader
 RUN composer dump-autoload --optimize --no-dev
 
-# Install Node deps and build Vite assets
+# Build frontend assets
 RUN npm ci 2>/dev/null || npm install
 RUN npm run build
 
-# Set permissions
+# Fix permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
-# Copy configs
-COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
-COPY docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
-COPY docker/php/www.conf /usr/local/etc/php-fpm.d/www.conf
-COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# ============================================================
+# Write Nginx config inline
+# ============================================================
+RUN printf '%s\n' \
+    'user nginx;' \
+    'worker_processes auto;' \
+    'error_log /var/log/nginx/error.log warn;' \
+    'pid /var/run/nginx.pid;' \
+    'events { worker_connections 1024; multi_accept on; }' \
+    'http {' \
+    '    include /etc/nginx/mime.types;' \
+    '    default_type application/octet-stream;' \
+    '    sendfile on;' \
+    '    keepalive_timeout 65;' \
+    '    client_max_body_size 100M;' \
+    '    gzip on;' \
+    '    gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;' \
+    '    include /etc/nginx/http.d/*.conf;' \
+    '}' > /etc/nginx/nginx.conf
 
-# Entrypoint
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN printf '%s\n' \
+    'server {' \
+    '    listen 80;' \
+    '    server_name _;' \
+    '    root /var/www/html/public;' \
+    '    index index.php index.html;' \
+    '    location / { try_files $uri $uri/ /index.php?$query_string; }' \
+    '    location ~ \.php$ {' \
+    '        try_files $uri =404;' \
+    '        fastcgi_split_path_info ^(.+\.php)(/.+)$;' \
+    '        fastcgi_pass 127.0.0.1:9000;' \
+    '        fastcgi_index index.php;' \
+    '        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;' \
+    '        include fastcgi_params;' \
+    '        fastcgi_read_timeout 300;' \
+    '    }' \
+    '    location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {' \
+    '        expires 1y;' \
+    '        add_header Cache-Control "public, immutable";' \
+    '        access_log off;' \
+    '    }' \
+    '    add_header X-Frame-Options "SAMEORIGIN" always;' \
+    '    add_header X-Content-Type-Options "nosniff" always;' \
+    '    location ~ /\.env { deny all; }' \
+    '    location ~ /\. { deny all; }' \
+    '    error_page 404 /index.php;' \
+    '}' > /etc/nginx/http.d/default.conf
+
+# ============================================================
+# Write PHP config inline
+# ============================================================
+RUN printf '%s\n' \
+    'display_errors = Off' \
+    'log_errors = On' \
+    'max_execution_time = 300' \
+    'max_input_time = 300' \
+    'memory_limit = 512M' \
+    'post_max_size = 100M' \
+    'upload_max_filesize = 100M' \
+    'opcache.enable = 1' \
+    'opcache.memory_consumption = 128' \
+    'opcache.max_accelerated_files = 10000' \
+    'opcache.revalidate_freq = 60' \
+    'date.timezone = UTC' > /usr/local/etc/php/conf.d/custom.ini
+
+# ============================================================
+# Write PHP-FPM pool config inline
+# ============================================================
+RUN printf '%s\n' \
+    '[www]' \
+    'user = www-data' \
+    'group = www-data' \
+    'listen = 127.0.0.1:9000' \
+    'listen.owner = www-data' \
+    'listen.group = www-data' \
+    'pm = dynamic' \
+    'pm.max_children = 20' \
+    'pm.start_servers = 4' \
+    'pm.min_spare_servers = 2' \
+    'pm.max_spare_servers = 8' \
+    'pm.max_requests = 500' \
+    'request_terminate_timeout = 300' > /usr/local/etc/php-fpm.d/www.conf
+
+# ============================================================
+# Write Supervisor config inline
+# ============================================================
+RUN mkdir -p /etc/supervisor/conf.d /var/log/supervisor \
+    && printf '%s\n' \
+    '[supervisord]' \
+    'nodaemon=true' \
+    'user=root' \
+    'logfile=/var/log/supervisor/supervisord.log' \
+    'pidfile=/var/run/supervisord.pid' \
+    '[program:php-fpm]' \
+    'command=php-fpm -F' \
+    'autostart=true' \
+    'autorestart=true' \
+    'stderr_logfile=/var/log/supervisor/php-fpm.err.log' \
+    'stdout_logfile=/var/log/supervisor/php-fpm.out.log' \
+    'priority=10' \
+    '[program:nginx]' \
+    'command=nginx -g "daemon off;"' \
+    'autostart=true' \
+    'autorestart=true' \
+    'stderr_logfile=/var/log/supervisor/nginx.err.log' \
+    'stdout_logfile=/var/log/supervisor/nginx.out.log' \
+    'priority=20' > /etc/supervisor/conf.d/supervisord.conf
+
+# ============================================================
+# Write Entrypoint script inline
+# ============================================================
+RUN printf '%s\n' \
+    '#!/bin/bash' \
+    'set -e' \
+    'mkdir -p /var/log/php /var/log/supervisor /var/log/nginx' \
+    'cd /var/www/html' \
+    'echo "Optimizing Laravel..."' \
+    'php artisan config:cache' \
+    'php artisan route:cache' \
+    'php artisan view:cache' \
+    'php artisan event:cache' \
+    'echo "Running migrations..."' \
+    'php artisan migrate --force --no-interaction' \
+    'echo "Creating storage link..."' \
+    'php artisan storage:link 2>/dev/null || true' \
+    'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache' \
+    'chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache' \
+    'echo "Starting Supervisor..."' \
+    'exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf' \
+    > /entrypoint.sh \
+    && chmod +x /entrypoint.sh
 
 EXPOSE 80
 
