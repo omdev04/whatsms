@@ -19,10 +19,8 @@ phpunit.xml
 *.code-workspace
 .editorconfig
 
-# Docker files (already inside build)
-docker
+# Docker compose files (not needed in build)
 docker-compose*.yml
-Dockerfile*
 
 # Laravel specific dev
 .styleci.yml
