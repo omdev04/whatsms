@@ -195,12 +195,13 @@ RUN printf '%s\n' \
     'mkdir -p /var/log/php /var/log/supervisor /var/log/nginx' \
     'cd /var/www/html' \
     'echo "Optimizing Laravel..."' \
-    'php artisan config:cache' \
-    'php artisan route:cache' \
-    'php artisan view:cache' \
-    'php artisan event:cache' \
+    'php artisan route:clear || true' \
+    'php artisan config:cache || true' \
+    'php artisan route:cache || true' \
+    'php artisan view:cache || true' \
+    'php artisan event:cache || true' \
     'echo "Running migrations..."' \
-    'php artisan migrate --force --no-interaction' \
+    'php artisan migrate --force --no-interaction || true' \
     'echo "Creating storage link..."' \
     'php artisan storage:link 2>/dev/null || true' \
     'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache' \
