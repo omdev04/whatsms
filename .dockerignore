@@ -1,0 +1,48 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Development files
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Tests
+tests
+phpunit.xml
+.phpunit.result.cache
+
+# IDE
+.idea
+.vscode
+*.code-workspace
+.editorconfig
+
+# Docker files (already inside build)
+docker
+docker-compose*.yml
+Dockerfile*
+
+# Laravel specific dev
+.styleci.yml
+README.md
+*.md
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs (will be created fresh in container)
+storage/logs/*.log
+
+# Compiled assets source (keep public/build)
+# resources/js
+# resources/css
+
+# Temp/cache
+bootstrap/cache/*.php
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*

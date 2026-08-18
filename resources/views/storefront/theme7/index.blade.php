@@ -1,0 +1,118 @@
+@extends('storefront.layout')
+@section('store_content')
+    {{-- Start header --}}
+    @include('storefront.partials.header')
+    {{-- End header --}}
+    <main>
+        <section class="home-section tabs-wrapper">
+            <div class="tab-header d-flex align-items-center justify-content-between">
+                <div class="tab-filter-wrp d-flex align-items-center justify-content-between">
+                    <div class="breadcrumb-wrp">
+                        <h2>{{ __('All Products') }}</h2>
+                        <ul class="breadcrumb d-flex align-items-center">
+                            <li class="breadcrumb-item">
+                                <a href="#">{{ __('Dashboard') }}</a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a href="#">{{ $store->name }}</a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a href="#">{{ __('Products') }}</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="tabs-filter d-flex align-items-center">
+                        <div class="sorting-menu">
+                            <span>{{ __('Sort by') }} :</span>
+                        </div>
+                        <div class="price-select">
+                            <select id="product_sort">
+                                <option value="">{{ __('Select Price') }}</option>
+                                <option value="hightolow">{{ __('High To Low') }}</option>
+                                <option value="lowtohigh">{{ __('Low To High') }}</option>
+                            </select>
+                        </div>
+                        <div class="filter-tabs d-flex align-items-center" id="sort_by">
+                            <a href="{{ route('store.slug', [$store->slug, 'grid']) }}" class="grid" data-val="grid"
+                                id="grid">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
+                                    fill="none">
+                                    <path
+                                        d="M2 0C1.46957 0 0.960859 0.210714 0.585786 0.585786C0.210714 0.960859 0 1.46957 0 2V4C0 4.53043 0.210714 5.03914 0.585786 5.41421C0.960859 5.78929 1.46957 6 2 6H4C4.53043 6 5.03914 5.78929 5.41421 5.41421C5.78929 5.03914 6 4.53043 6 4V2C6 1.46957 5.78929 0.960859 5.41421 0.585786C5.03914 0.210714 4.53043 0 4 0H2ZM2 8C1.46957 8 0.960859 8.21071 0.585786 8.58579C0.210714 8.96086 0 9.46957 0 10V12C0 12.5304 0.210714 13.0391 0.585786 13.4142C0.960859 13.7893 1.46957 14 2 14H4C4.53043 14 5.03914 13.7893 5.41421 13.4142C5.78929 13.0391 6 12.5304 6 12V10C6 9.46957 5.78929 8.96086 5.41421 8.58579C5.03914 8.21071 4.53043 8 4 8H2ZM8 2C8 1.46957 8.21071 0.960859 8.58579 0.585786C8.96086 0.210714 9.46957 0 10 0H12C12.5304 0 13.0391 0.210714 13.4142 0.585786C13.7893 0.960859 14 1.46957 14 2V4C14 4.53043 13.7893 5.03914 13.4142 5.41421C13.0391 5.78929 12.5304 6 12 6H10C9.46957 6 8.96086 5.78929 8.58579 5.41421C8.21071 5.03914 8 4.53043 8 4V2ZM8 10C8 9.46957 8.21071 8.96086 8.58579 8.58579C8.96086 8.21071 9.46957 8 10 8H12C12.5304 8 13.0391 8.21071 13.4142 8.58579C13.7893 8.96086 14 9.46957 14 10V12C14 12.5304 13.7893 13.0391 13.4142 13.4142C13.0391 13.7893 12.5304 14 12 14H10C9.46957 14 8.96086 13.7893 8.58579 13.4142C8.21071 13.0391 8 12.5304 8 12V10Z"
+                                        fill="white" />
+                                </svg>
+                            </a>
+                            <a href="{{ route('store.slug', [$store->slug, 'list']) }}" class="list" data-val="list"
+                                id="list">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
+                                    fill="none">
+                                    <path fill-rule="evenodd" clip-rule="evenodd"
+                                        d="M0 1C0 0.734784 0.105357 0.48043 0.292893 0.292893C0.48043 0.105357 0.734784 0 1 0H13C13.2652 0 13.5196 0.105357 13.7071 0.292893C13.8946 0.48043 14 0.734784 14 1C14 1.26522 13.8946 1.51957 13.7071 1.70711C13.5196 1.89464 13.2652 2 13 2H1C0.734784 2 0.48043 1.89464 0.292893 1.70711C0.105357 1.51957 0 1.26522 0 1ZM0 5C0 4.73478 0.105357 4.48043 0.292893 4.29289C0.48043 4.10536 0.734784 4 1 4H13C13.2652 4 13.5196 4.10536 13.7071 4.29289C13.8946 4.48043 14 4.73478 14 5C14 5.26522 13.8946 5.51957 13.7071 5.70711C13.5196 5.89464 13.2652 6 13 6H1C0.734784 6 0.48043 5.89464 0.292893 5.70711C0.105357 5.51957 0 5.26522 0 5ZM0 9C0 8.73478 0.105357 8.48043 0.292893 8.29289C0.48043 8.10536 0.734784 8 1 8H13C13.2652 8 13.5196 8.10536 13.7071 8.29289C13.8946 8.48043 14 8.73478 14 9C14 9.26522 13.8946 9.51957 13.7071 9.70711C13.5196 9.89464 13.2652 10 13 10H1C0.734784 10 0.48043 9.89464 0.292893 9.70711C0.105357 9.51957 0 9.26522 0 9ZM0 13C0 12.7348 0.105357 12.4804 0.292893 12.2929C0.48043 12.1054 0.734784 12 1 12H13C13.2652 12 13.5196 12.1054 13.7071 12.2929C13.8946 12.4804 14 12.7348 14 13C14 13.2652 13.8946 13.5196 13.7071 13.7071C13.5196 13.8946 13.2652 14 13 14H1C0.734784 14 0.48043 13.8946 0.292893 13.7071C0.105357 13.5196 0 13.2652 0 13Z"
+                                        fill="#C4C4C4" />
+                                </svg>
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+                <form class="product-search-form">
+                    <div class="form-input d-flex align-items-center">
+                        <button class="search-btn" type="submit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"
+                                fill="none">
+                                <path
+                                    d="M11.1751 10.2099L8.60234 7.63711C9.22175 6.81252 9.55613 5.80882 9.555 4.7775C9.555 2.1432 7.4118 0 4.7775 0C2.1432 0 0 2.1432 0 4.7775C0 7.4118 2.1432 9.555 4.7775 9.555C5.80882 9.55613 6.81252 9.22175 7.63711 8.60234L10.2099 11.1751C10.3401 11.2915 10.51 11.3537 10.6846 11.3488C10.8592 11.3439 11.0253 11.2724 11.1488 11.1488C11.2724 11.0253 11.3439 10.8592 11.3488 10.6846C11.3537 10.51 11.2915 10.3401 11.1751 10.2099ZM1.365 4.7775C1.365 4.10257 1.56514 3.4428 1.94011 2.88162C2.31508 2.32043 2.84804 1.88305 3.47159 1.62476C4.09515 1.36648 4.78129 1.2989 5.44325 1.43057C6.10521 1.56224 6.71325 1.88725 7.1905 2.3645C7.66775 2.84174 7.99276 3.44979 8.12443 4.11175C8.2561 4.77371 8.18852 5.45985 7.93024 6.08341C7.67196 6.70696 7.23457 7.23992 6.67338 7.61489C6.1122 7.98986 5.45243 8.19 4.7775 8.19C3.87278 8.18891 3.00543 7.82904 2.3657 7.1893C1.72596 6.54957 1.36609 5.68222 1.365 4.7775Z"
+                                    fill="#060606"></path>
+                            </svg>
+                        </button>
+                        <input type="search" id="search" class="form-control" placeholder="Search" />
+                    </div>
+                </form>
+            </div>
+            </div>
+            <div class="row no-gutters">
+                <div class="col-xxl-9 col-lg-8 col-12">
+                    <div class="main-left-col sticky-column">
+                        <div class="tabs-container">
+                            <div id="filter-tab-1" class="filter-tab-content active">
+                                <ul class="tabs pro_category category-tab d-flex align-items-center">
+                                    @php
+                                        $key = 0;
+                                    @endphp
+                                    @foreach ($products as $item => $product)
+                                        @php
+                                            $total_product = count($product);
+                                        @endphp
+                                        @if ($total_product != 0)
+                                            <li class="d-flex align-items-center custom-list-group-item {{ $key == 0 ? 'active' : '' }}"
+                                                data-href="{{ $loop->iteration }}{!! str_replace(' ', '_', $item) !!}"
+                                                data-tab="tab-{{ $key }}">
+                                                {{ __($item) }}
+                                                <span>
+                                                    {{ __($total_product) }}
+                                                </span>
+                                            </li>
+                                        @endif
+                                        @php
+                                            $key++;
+                                        @endphp
+                                    @endforeach
+
+                                </ul>
+                                <div class="tabs-container">
+                                    <div id="product_view"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{-- Start card-summary --}}
+                @include('storefront.card-summary')
+                {{-- End card-summary --}}
+            </div>
+        </section>
+    </main>
+    {{-- Start footer --}}
+    @include('storefront.partials.footer')
+    {{-- End footer --}}
+@endsection

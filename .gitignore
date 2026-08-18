@@ -1,0 +1,92 @@
+# ============================================================
+# WhatsStore SaaS — .gitignore
+# Laravel 11 + PHP 8.2
+# ============================================================
+
+# ─── Laravel Core ───────────────────────────────────────────
+/vendor/
+/node_modules/
+/public/hot
+/public/storage
+/public/build
+/storage/*.key
+
+# ─── Environment (NEVER commit these!) ──────────────────────
+.env
+.env.*
+!.env.example
+!.env.dokploy
+
+# ─── Laravel Cache / Compiled Files ─────────────────────────
+bootstrap/cache/*.php
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/testing/*
+storage/framework/views/*
+storage/logs/*.log
+
+# ─── Composer ───────────────────────────────────────────────
+composer.phar
+auth.json
+
+# ─── NPM / Node ─────────────────────────────────────────────
+npm-debug.log
+yarn-error.log
+yarn.lock
+package-lock.json
+.npm
+
+# ─── IDE & Editors ──────────────────────────────────────────
+/.idea
+/.vscode
+*.code-workspace
+*.swp
+*.swo
+*~
+.project
+.settings/
+.buildpath
+
+# ─── OS Files ───────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ─── PHPUnit ────────────────────────────────────────────────
+.phpunit.result.cache
+.phpunit.cache/
+coverage/
+/clover.xml
+/phpunit.xml.bak
+
+# ─── Docker (local dev only) ─────────────────────────────────
+docker-compose.override.yml
+
+# ─── Deployment ─────────────────────────────────────────────
+.deploy_key
+*.pem
+*.ppk
+
+# ─── Laravel Telescope (dev tool DB) ────────────────────────
+/database/telescope.sqlite
+
+# ─── SQLite (local dev DB) ──────────────────────────────────
+/database/*.sqlite
+/database/*.sqlite-journal
+
+# ─── Vendor test PDFs (PayPal package) ──────────────────────
+/vendor/srmklive/paypal/tests/Mocks/samples/
+
+# ─── Misc ───────────────────────────────────────────────────
+*.log
+*.cache
+*.tmp
+*.bak
+*.orig
+Homestead.json
+Homestead.yaml
