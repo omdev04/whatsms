@@ -60,6 +60,13 @@ RUN composer install \
     --ignore-platform-reqs
 
 COPY . .
+
+# Create minimal build-time .env (APP_NAME with space causes dotenv parse error)
+RUN echo "APP_NAME=WhatsStoreSaaS" > .env \
+    && echo "APP_KEY=base64:$(head -c 32 /dev/urandom | base64)" >> .env \
+    && echo "APP_ENV=local" >> .env \
+    && echo "DB_CONNECTION=mysql" >> .env
+
 RUN composer dump-autoload --optimize --no-dev
 
 # Build frontend assets
