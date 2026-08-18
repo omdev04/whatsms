@@ -207,9 +207,11 @@ RUN printf '%s\n' \
     'echo "Running migrations & seeders..."' \
     'php artisan migrate --force --no-interaction || true' \
     'php artisan db:seed --force --no-interaction || true' \
-    'echo "Creating storage link..."' \
+    'echo "Creating storage & uploads symlinks..."' \
     'php artisan storage:link 2>/dev/null || true' \
-    'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/resources/lang' \
+    'ln -sfn /var/www/html/storage/uploads /var/www/html/public/storage/uploads 2>/dev/null || true' \
+    'ln -sfn /var/www/html/storage/uploads /var/www/html/public/uploads 2>/dev/null || true' \
+    'chown -R www-data:www-data /var/www/html/storage /var/www/html/public /var/www/html/bootstrap/cache /var/www/html/resources/lang' \
     'chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/resources/lang' \
     'echo "Starting Supervisor..."' \
     'exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf' \
