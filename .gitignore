@@ -33,7 +33,6 @@ auth.json
 npm-debug.log
 yarn-error.log
 yarn.lock
-package-lock.json
 .npm
 
 # ─── IDE & Editors ──────────────────────────────────────────
