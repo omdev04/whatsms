@@ -117,6 +117,7 @@ RUN printf '%s\n' \
     '        fastcgi_read_timeout 300;' \
     '    }' \
     '    location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {' \
+    '        try_files $uri /index.php?$query_string;' \
     '        expires 1y;' \
     '        add_header Cache-Control "public, immutable";' \
     '        access_log off;' \
@@ -125,6 +126,7 @@ RUN printf '%s\n' \
     '    add_header X-Content-Type-Options "nosniff" always;' \
     '    location ~ /\.env { deny all; }' \
     '    location ~ /\. { deny all; }' \
+    '    error_page 403 = /index.php;' \
     '    error_page 404 /index.php;' \
     '}' > /etc/nginx/http.d/default.conf
 
