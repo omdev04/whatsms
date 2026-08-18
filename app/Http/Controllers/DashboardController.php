@@ -54,31 +54,29 @@ class DashboardController extends Controller
         $segments = $segments[1] ?? null;
 
         if ($segments == null) {
-            $local = parse_url(config('app.url'))['host'];
-
-            // Get the request host
+            $parsedUrl = parse_url(config('app.url'));
+            $local = $parsedUrl['host'] ?? request()->getHost();
             $remote = request()->getHost();
-            // Get the remote domain
 
-            // remove WWW
             $remote = str_replace('www.', '', $remote);
+            $local = str_replace('www.', '', $local);
 
-            if ($local != $remote){
-                $domain = CustomDomainRequest::where('status','1')->where('custom_domain',$remote)->first();
-                // If the domain exists
-                if(isset($domain) && !empty($domain)) {
-                    $store = Store::find($domain->store_id);
-                    if($store && $store['domain_switch'] == 'on') {
-                        $store_slug = $store->slug;
-                        return app('App\Http\Controllers\StoreController')->storeSlug($store_slug);
-                    }
-                } else {
-                    $sub_store = Store::where('subdomain', '=', $remote)->where('enable_subdomain', 'on')->first();
-                    if ($sub_store && $sub_store->enable_subdomain == 'on') {
-                        return app('App\Http\Controllers\StoreController')->storeSlug($sub_store->slug);
+            if ($local != 'localhost' && $local != '127.0.0.1' && $local != $remote){
+                try {
+                    $domain = CustomDomainRequest::where('status','1')->where('custom_domain',$remote)->first();
+                    if(isset($domain) && !empty($domain)) {
+                        $store = Store::find($domain->store_id);
+                        if($store && $store['domain_switch'] == 'on') {
+                            $store_slug = $store->slug;
+                            return app('App\Http\Controllers\StoreController')->storeSlug($store_slug);
+                        }
                     } else {
-                        return abort('404', 'Not Found');
+                        $sub_store = Store::where('subdomain', '=', $remote)->where('enable_subdomain', 'on')->first();
+                        if ($sub_store && $sub_store->enable_subdomain == 'on') {
+                            return app('App\Http\Controllers\StoreController')->storeSlug($sub_store->slug);
+                        }
                     }
+                } catch (\Throwable $e) {
                 }
             }
         }

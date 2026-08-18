@@ -37,11 +37,15 @@ class AuthenticatedSessionController extends Controller
             header('location:install');
             die;
         }
-        $settings = Utility::settings();
-        if($settings['recaptcha_module'] == 'yes')
-        {
-            config(['captcha.secret'  => $settings['google_recaptcha_secret']]);
-            config(['captcha.sitekey' => $settings['google_recaptcha_key']]);
+        try {
+            $settings = Utility::settings();
+            if(isset($settings['recaptcha_module']) && $settings['recaptcha_module'] == 'yes')
+            {
+                config(['captcha.secret'  => $settings['google_recaptcha_secret'] ?? '']);
+                config(['captcha.sitekey' => $settings['google_recaptcha_key'] ?? '']);
+            }
+        } catch (\Throwable $e) {
+            // Prevent 500 error if settings table or DB is not ready yet
         }
     }
 
@@ -70,9 +74,9 @@ class AuthenticatedSessionController extends Controller
         // ReCpatcha
         if(isset($settings['recaptcha_module']) && $settings['recaptcha_module'] == 'yes')
         {
-            if($settings['google_recaptcha_version'] == 'v2'){
+            if(isset($settings['google_recaptcha_version']) && $settings['google_recaptcha_version'] == 'v2'){
                 $validation['g-recaptcha-response'] = 'required|captcha';
-            } elseif ($settings['google_recaptcha_version'] == 'v3'){
+            } elseif (isset($settings['google_recaptcha_version']) && $settings['google_recaptcha_version'] == 'v3'){
                 $result = event(new VerifyReCaptchaToken($request));
                 if (!isset($result[0]['status']) || $result[0]['status'] != true) {
                     $key = 'g-recaptcha-response';
@@ -192,19 +196,39 @@ class AuthenticatedSessionController extends Controller
 
     public function showLoginForm($lang = '')
     {
-        if ($lang == '') {
-            $lang = \App\Models\Utility::getValByName('default_language');
+        if (empty($lang)) {
+            try {
+                $lang = \App\Models\Utility::getValByName('default_language');
+            } catch (\Throwable $e) {
+                $lang = 'en';
+            }
+        }
+        if (empty($lang)) {
+            $lang = 'en';
         }
 
-        $language_name = Languages::where('code', $lang)->get()->first();
+        try {
+            $language_name = Languages::where('code', $lang)->first();
+            if (!$language_name) {
+                $language_name = Languages::where('code', 'en')->first();
+            }
+            if (!$language_name) {
+                $language_name = Languages::first();
+            }
+        } catch (\Throwable $e) {
+            $language_name = null;
+        }
 
-        if (isset($language_name)) {
+        if (!$language_name) {
+            $language_name = (object) ['code' => 'en', 'fullName' => 'English'];
+        }
+
+        try {
             \App::setLocale($lang);
-
-            return view('auth.login', compact('lang', 'language_name'));
-        } else {
-            return redirect()->back();
+        } catch (\Throwable $e) {
         }
+
+        return view('auth.login', compact('lang', 'language_name'));
     }
 
     public function showLinkRequestForm($lang = '')
