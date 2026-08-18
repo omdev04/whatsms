@@ -152,8 +152,7 @@ Route::group(['middleware' => ['verified']], function () {
         Route::post('pusher-setting', [SettingController::class, 'savePusherSettings'])->name('pusher.setting');
 
 
-        Route::post('test-mail', [SettingController::class, 'testMail'])->name('test.mail')->middleware(['auth', 'XSS']);
-        Route::get('test-mail', [SettingController::class, 'testMail'])->name('test.mail')->middleware(['auth', 'XSS']);
+        Route::match(['get', 'post'], 'test-mail', [SettingController::class, 'testMail'])->name('test.mail')->middleware(['auth', 'XSS']);
         Route::post('test-mail/send', [SettingController::class, 'testSendMail'])->name('test.send.mail')->middleware(['auth', 'XSS']);
 
         Route::get('settings', [SettingController::class, 'index'])->name('settings');
