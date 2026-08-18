@@ -28,9 +28,7 @@ return [
             'JSON',
             'cURL',
         ],
-        'apache' => [
-            'mod_rewrite',
-        ],
+        'apache' => [],
     ],
 
     /*

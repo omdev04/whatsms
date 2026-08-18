@@ -74,9 +74,11 @@ RUN npm ci 2>/dev/null || npm install
 RUN npm run build
 
 # Fix permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage \
-    && chmod -R 775 /var/www/html/bootstrap/cache
+RUN mkdir -p /var/www/html/storage/framework/cache /var/www/html/storage/framework/sessions /var/www/html/storage/framework/views /var/www/html/storage/logs /var/www/html/resources/lang \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 777 /var/www/html/storage \
+    && chmod -R 777 /var/www/html/bootstrap/cache \
+    && chmod -R 777 /var/www/html/resources/lang
 
 # ============================================================
 # Write Nginx config inline
@@ -192,10 +194,12 @@ RUN mkdir -p /etc/supervisor/conf.d /var/log/supervisor \
 RUN printf '%s\n' \
     '#!/bin/bash' \
     'set -e' \
-    'mkdir -p /var/log/php /var/log/supervisor /var/log/nginx' \
+    'mkdir -p /var/log/php /var/log/supervisor /var/log/nginx /var/www/html/storage/framework/cache /var/www/html/storage/framework/sessions /var/www/html/storage/framework/views /var/www/html/storage/logs' \
     'cd /var/www/html' \
+    'touch storage/installed 2>/dev/null || true' \
     'echo "Optimizing Laravel..."' \
     'php artisan route:clear || true' \
+    'php artisan config:clear || true' \
     'php artisan config:cache || true' \
     'php artisan route:cache || true' \
     'php artisan view:cache || true' \
@@ -204,8 +208,8 @@ RUN printf '%s\n' \
     'php artisan migrate --force --no-interaction || true' \
     'echo "Creating storage link..."' \
     'php artisan storage:link 2>/dev/null || true' \
-    'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache' \
-    'chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache' \
+    'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/resources/lang' \
+    'chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/resources/lang' \
     'echo "Starting Supervisor..."' \
     'exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf' \
     > /entrypoint.sh \
