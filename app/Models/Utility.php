@@ -67,32 +67,35 @@ class Utility extends Model
     public static function settings($user_id = null)
     {
         if(is_null(self::$fetchSettingData)){
-            $data = DB::table('settings');
-            self::$fetchSettingData = DB::table('settings')->where('created_by', '=', 1)->get();
-            if (empty($user_id)) {
+            try {
+                $data = DB::table('settings');
+                self::$fetchSettingData = DB::table('settings')->where('created_by', '=', 1)->get();
+                if (empty($user_id)) {
 
-            if (\Auth::check()) {
-                if (\Auth::user()->type == 'super admin') {
-                    $data = $data->where('created_by', '=', \Auth::user()->creatorId())->where('store_id', '0')->get();
-                    if (count($data) == 0) {
+                    if (\Auth::check()) {
+                        if (\Auth::user()->type == 'super admin') {
+                            $data = $data->where('created_by', '=', \Auth::user()->creatorId())->where('store_id', '0')->get();
+                            if (count($data) == 0) {
+                                $data = self::$fetchSettingData;
+                            }
+                        } else {
+                            $data = $data->where('created_by', '=', \Auth::user()->creatorId())->where('store_id', \Auth::user()->current_store)->get();
+                            if (count($data) == 0) {
+                                $data = self::$fetchSettingData;
+                            }
+                        }
+                    } else {
                         $data = self::$fetchSettingData;
                     }
                 } else {
-                    $data = $data->where('created_by', '=', \Auth::user()->creatorId())->where('store_id', \Auth::user()->current_store)->get();
-                    if (count($data) == 0) {
-                        $data = self::$fetchSettingData;
-                    }
+                    $data->where('created_by', '=', $user_id);
+                    $data = $data->get();
                 }
-            } else {
-                $data = self::$fetchSettingData;
+                self::$fetchSettingData = $data;
+            } catch (\Throwable $e) {
+                self::$fetchSettingData = collect([]);
             }
-        } else {
-            $data->where('created_by', '=', $user_id);
-            $data = $data->get();
         }
-        self::$fetchSettingData = $data;
-
-    }
 
         $settings = [
             "site_currency" => "USD",
