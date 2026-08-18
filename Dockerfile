@@ -204,8 +204,9 @@ RUN printf '%s\n' \
     'php artisan route:cache || true' \
     'php artisan view:cache || true' \
     'php artisan event:cache || true' \
-    'echo "Running migrations..."' \
+    'echo "Running migrations & seeders..."' \
     'php artisan migrate --force --no-interaction || true' \
+    'php artisan db:seed --force --no-interaction || true' \
     'echo "Creating storage link..."' \
     'php artisan storage:link 2>/dev/null || true' \
     'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/resources/lang' \
